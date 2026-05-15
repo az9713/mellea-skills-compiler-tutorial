@@ -74,7 +74,11 @@ mellea-skills certify skills/weather/weather_mellea
 
 ## Documentation
 
-This repository adds 22 documentation files organized across seven sections. Start with [docs/index.md](docs/index.md) for the full navigation hub.
+This repository contains two independent 360-degree documentation sets for the Mellea Skills Compiler — one authored by **Claude** (Anthropic), one by **OpenAI Codex**. Both cover the same system from scratch; reading both gives complementary perspectives.
+
+### Claude-authored docs (`docs/`)
+
+22 files organized across seven sections. Start with [docs/index.md](docs/index.md) for the full navigation hub.
 
 ### Overview
 
@@ -136,6 +140,22 @@ This repository adds 22 documentation files organized across seven sections. Sta
 | Doc | What's inside |
 |-----|--------------|
 | [Common issues](docs/troubleshooting/common-issues.md) | Top issues with exact fix commands: installation, compilation timeouts, lint failures, smoke check failures, Ollama connectivity, stub errors, certification gaps, export issues |
+
+---
+
+### OpenAI Codex-authored docs (`codex_doc/`)
+
+A parallel 360-degree documentation set — 7 documents covering the same system independently. Start with [codex_doc/index.md](codex_doc/index.md) or the table below.
+
+| Doc | What's inside |
+|-----|--------------|
+| [Mellea demystified](codex_doc/mellea-demystified.md) | The 360-degree explanation: what Mellea is, why this project calls itself a skill compiler, what pain points it addresses, where it works well, and where it needs improvement |
+| [User onboarding](codex_doc/user-onboarding.md) | Shortest path from checkout to productive use — setup, first run, compile, run, certify, and export |
+| [Architecture and control flow](codex_doc/architecture-and-control-flow.md) | How the package is organized and how control moves through CLI commands, compiler stages, runtime execution, certification, and export |
+| [Compiler pipeline](codex_doc/compiler-pipeline.md) | The actual compile path: Claude Code slash commands, intermediate IR, deterministic writers, lints, smoke checks, and generated package anatomy |
+| [Runtime governance and certification](codex_doc/runtime-governance-and-certification.md) | How AI Atlas Nexus, Granite Guardian, Mellea hooks, audit trails, compliance classification, and reports fit together |
+| [Extension guide](codex_doc/extension-guide.md) | How to add skills, dialects, compiler checks, deterministic writers, export targets, policy controls, and tests |
+| [Codebase map](codex_doc/codebase-map.md) | File-by-file map of the implementation surface and the most important examples and tests |
 
 ---
 
