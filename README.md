@@ -1,323 +1,172 @@
-<h1 align="center">Mellea Skills Compiler</h1>
+<h1 align="center">Mellea Skills Compiler — Tutorial & Documentation</h1>
 
 <p align="center">
-  <strong>Compiling and certifying agent skills with Mellea</strong><br>
-  <em>Research preview — IBM Research, May 2026</em>
+  <strong>Comprehensive documentation and onboarding guide for the Mellea Skills Compiler</strong><br>
+  <em>IBM Research AI agent certification pipeline — research preview v0.1</em>
 </p>
 
 <p align="center">
-  <a href="#what-is-mellea-skills-compiler">What</a> &middot;
-  <a href="#why">Why</a> &middot;
-  <a href="#how-it-works">How</a> &middot;
-  <a href="#quick-start">Quick Start</a> &middot;
-  <a href="#example-outputs">Examples</a> &middot;
-  <a href="#next-steps">Next Steps</a> &middot;
-  <a href="FAQ.md">FAQ</a> &middot;
+  <a href="#original-repository">Original Repo</a> &middot;
+  <a href="#what-is-the-mellea-skills-compiler">What is it?</a> &middot;
+  <a href="#two-command-workflow">Quick Start</a> &middot;
+  <a href="#documentation">Docs</a> &middot;
+  <a href="#pre-compiled-examples">Examples</a> &middot;
   <a href="docs/Mellea_Skills_Compiler-tech_report.pdf">Tech Report</a> &middot;
-  <a href="#citation">Cite</a>
+  <a href="FAQ.md">FAQ</a>
 </p>
 
 ---
 
-> **Research preview (v0.1)** — This is an early-stage research project from IBM Research. The APIs, CLI, and artifact formats are subject to change. We welcome feedback via [Issues](../../issues).
+## Original Repository
 
-> **Coming soon** (active development):
+> **This repository is a tutorial and documentation companion to the official IBM Research project.**
 >
-> - Interactive dependency resolution during compile
-> - Export for additional agent harnesses — MCP, LangGraph, and Claude Code available today, all experimental
-> - Support for compiling non-`.md` agent skills
-> - Increased coverage for different interaction modalities (streaming, conversational session, scheduled, event-triggered)
+> **Original source:** [**github.com/generative-computing/mellea-skills-compiler**](https://github.com/generative-computing/mellea-skills-compiler)
+>
+> This fork adds a comprehensive, structured documentation set covering every aspect of the compiler — what it is, how it works, how to extend it, and how to build on top of it. All original code, examples, and skills are preserved unchanged. The docs are the addition.
 
-## What is Mellea Skills Compiler?
+Additional reference: **[YouTube — AI Skills Security, Open AI Deployment Company & Zero Days](https://www.youtube.com/watch?v=YCWwh70FZtQ&t=16s)**
 
-Mellea Skills Compiler is a certification pipeline for AI agent skills. It takes a natural-language skill specification (a `.md` file) and produces a **typed, instrumented program** with policy-driven guardrails and auditable execution traces.
+---
 
-The pipeline composes three IBM Research technologies:
+## What is the Mellea Skills Compiler?
 
-| Component                                                                          | Role                                                                     | Source     |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------- |
-| **[Mellea](https://github.com/generative-computing/mellea)**                       | Structured generative programs with typed schemas, validation, and hooks | Apache 2.0 |
-| **[Granite Guardian](https://huggingface.co/ibm-granite/granite-guardian-3.3-8b)** | Runtime risk detection integrated via Mellea's hook system               | Apache 2.0 |
-| **[AI Atlas Nexus](https://github.com/IBM/ai-atlas-nexus)**                        | Governance knowledge graph mapping use cases to risks across taxonomies  | Apache 2.0 |
+The Mellea Skills Compiler is a **certification pipeline for AI agent skills**. It takes a natural-language skill specification — a `.md` file describing what an agent should do — and produces a typed, instrumented Python program with policy-driven guardrails and auditable execution traces.
 
-## Why
+It composes three IBM Research technologies:
 
-AI agents increasingly ship as natural-language specifications — Markdown files, YAML configs, system prompts — executed by LLMs without formal verification, runtime monitoring, or compliance documentation. The specification format is right for rapid development, but specifications alone don't guarantee reliable execution at scale.
+| Component | Role |
+|-----------|------|
+| **[Mellea](https://github.com/generative-computing/mellea)** | Structured LLM generation — typed schemas, `@generative` extraction, repair loops, hook system |
+| **[Granite Guardian 3.3 8B](https://huggingface.co/ibm-granite/granite-guardian-3.3-8b)** | Runtime risk detection — checks every LLM generation for harm, bias, jailbreak, hallucination |
+| **[AI Atlas Nexus](https://github.com/IBM/ai-atlas-nexus)** | Governance knowledge graph — maps use cases to NIST AI RMF and Credo UCF requirements |
 
-Mellea Skills Compiler addresses three governance gaps:
+It addresses three governance gaps in current AI agent deployment:
 
-- **Specification opacity** — When an LLM interprets a Markdown spec, contradictions are silently resolved through implicit judgement. Structured decomposition surfaces these conflicts as testable failures.
-- **Runtime unobservability** — Agent outputs are typically unmonitored. Mellea Skills Compiler instruments every LLM generation with Guardian risk checks and JSONL audit trails.
-- **Compliance disconnect** — Enterprise frameworks (NIST AI RMF, EU AI Act) require documented evidence of risk management. Mellea Skills Compiler maps governance requirements to runtime capabilities and produces evidence packages.
+- **Specification opacity** — contradictions in `.md` specs are silently resolved by LLMs; decomposition surfaces them as testable failures
+- **Runtime unobservability** — no audit trail of what the agent generated or whether outputs were safe; Guardian hooks and JSONL audit trails fix this
+- **Compliance disconnect** — no standard way to map governance requirements to runtime capabilities; the `certify` pipeline produces structured NIST AI RMF evidence
 
-## How It Works
+---
 
-Mellea Skills Compiler operates as a two-step user workflow — `compile` then `certify`:
-
-```
-SKILL.md / spec.md          COMPILE                                CERTIFY
-Natural-language      →    mellea-fy                          →    AI Atlas Nexus → policy manifest
-agent specification        spec → typed pipeline                   Guardian hooks instrument runtime
-                           contradictions surfaced                 fixtures executed + audited
-                                                                   compliance classification + report
-```
-
-**Step 1: Compile** — A `.md` specification is decomposed into a typed Mellea pipeline package: Pydantic schemas, `@generative` extraction slots, requirement validators, and multi-phase orchestration code. Two compilation paths are available: the `mellea-skills compile` CLI command, or the `/mellea-fy` command inside Claude Code. See [`src/mellea_skills_compiler/examples/`](src/mellea_skills_compiler/examples/) for pre-compiled examples.
-
-**Step 2: Certify** — A single `mellea-skills certify` invocation performs end-to-end governance: AI Atlas Nexus identifies applicable risks from Granite Guardian, NIST AI RMF, and Credo UCF taxonomies and emits a `PolicyManifest`; Guardian hooks configured from that manifest monitor every `m.instruct()` call as fixtures execute; each governance requirement is classified as AUTOMATED, PARTIAL, or MANUAL based on runtime evidence; a compliance report and audit trail are written alongside the compiled pipeline.
-
-## Install
-
-### Claude Setup
-
-1. Claude Code is required to compile a Mellea skill. Please ensure that the Claude Code is installed by following the guide here: https://code.claude.com/docs/en/quickstart
-
-2. Set relevant platform-specific environment variables to communicate with your Claude platform.
-
-   For example, Claude via LiteLLM Gateway requires following env variables:
-
-   ```
-   export ANTHROPIC_BASE_URL = ""
-   export ANTHROPIC_AUTH_TOKEN = ""
-   ```
-
-   or if you have an ANTHROPIC_API_KEY
-
-   ```
-   export ANTHROPIC_API_KEY = ""
-   export ANTHROPIC_BASE_URL = ""
-   ```
-
-### Project Code
-
-Clone code repository
-
-```
-git clone https://github.com/generative-computing/mellea-skills-compiler
-```
-
-Create Python environment and install library
+## Two-command workflow
 
 ```bash
-# Requires Python >=3.11, <3.14.4
-python3 -m venv .venv
-source .venv/bin/activate
-
+# Install
+git clone https://github.com/az9713/mellea-skills-compiler-tutorial
+cd mellea-skills-compiler-tutorial
+python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
+
+# Step 1: run a pre-compiled skill immediately (no compile needed)
+mellea-skills run examples/weather/weather_mellea --fixture rain_check_city
+
+# Step 2: compile your own skill
+mellea-skills compile skills/weather/spec.md
+
+# Step 3: certify it
+mellea-skills certify skills/weather/weather_mellea
 ```
 
-Set Ollama API URL in the environment variables:
+**Prerequisites:** Python ≥ 3.11, Claude Code (`npm install -g @anthropic-ai/claude-code`), Ollama with `granite3.3:8b` and `ibm/granite3.3-guardian:8b` pulled. See [docs/getting-started/prerequisites.md](docs/getting-started/prerequisites.md).
+
+---
+
+## Documentation
+
+This repository adds 22 documentation files organized across seven sections. Start with [docs/index.md](docs/index.md) for the full navigation hub.
+
+### Overview
+
+| Doc | What's inside |
+|-----|--------------|
+| [What is the Mellea Skills Compiler?](docs/overview/what-is-mellea.md) | The compiler metaphor, three component technologies, the critical name disambiguation (Mellea library vs. Mellea Skills Compiler), and the two-step workflow |
+| [Key concepts](docs/overview/key-concepts.md) | Complete glossary — every term used across all docs defined in one place: archetype, audit trail, certification, disposition, fixture, modality, PolicyManifest, stub, tier, and more |
+
+### Getting started
+
+| Doc | What's inside |
+|-----|--------------|
+| [Prerequisites](docs/getting-started/prerequisites.md) | Exact dependencies with verify commands: Python version bounds, Claude Code install, Ollama setup, Granite models, environment variables |
+| [Quickstart](docs/getting-started/quickstart.md) | Run the pre-compiled weather skill in under 15 minutes — no compilation required |
+| [Your first skill](docs/getting-started/your-first-skill.md) | Zero-to-hero: write a spec from scratch, compile it, inspect the output, fill stubs, run fixtures, certify |
+
+### Concepts
+
+| Doc | What's inside |
+|-----|--------------|
+| [The skill compiler](docs/concepts/the-skill-compiler.md) | The full 10-step compilation pipeline — five-axis classification, inventory, element mapping, dependency audit, code generation, 14 structural lints, smoke check. The Claude boundary and wrapper-rendered files explained. |
+| [Compiled package anatomy](docs/concepts/compiled-package-anatomy.md) | Every file in a `<name>_mellea/` package: what it does, whether it's LLM-generated or wrapper-rendered, and what's safe to modify |
+| [Skill archetypes](docs/concepts/skill-archetypes.md) | The five reasoning patterns (A/B/C/D1/D2/E) with real pipeline code examples for each, and a table of how archetype affects compilation |
+| [Dependency resolution](docs/concepts/dependency-resolution.md) | C1–C9 dependency categories, the eight dispositions (`bundle`, `real_impl`, `stub`, `mock`, etc.), and how stubs are generated and documented |
+| [Certification pipeline](docs/concepts/certification-pipeline.md) | Nexus risk identification, Guardian hooks (audit vs. enforce mode), PolicyManifest structure, AUTOMATED/PARTIAL/MANUAL compliance classification, audit trail format |
+
+### Guides
+
+| Doc | What's inside |
+|-----|--------------|
+| [Write a skill spec](docs/guides/write-a-skill-spec.md) | How to author a `SKILL.md` that compiles cleanly — frontmatter fields, phase naming, output type specification, constraint declaration, common mistakes, and a spec template |
+| [Fill stubs](docs/guides/fill-stubs.md) | Step-by-step: find stubs, read them, implement them, verify — with troubleshooting for the common failure modes |
+| [Run and test fixtures](docs/guides/run-and-test-fixtures.md) | Fixture system, Guardian flags, smoke check exit codes, T1/T2/T3 tier system, adding custom fixtures, timing expectations |
+| [Export to other harnesses](docs/guides/export-to-other-harnesses.md) | `mellea-skills export` for LangGraph, MCP, and Claude Code; manual integration pattern; what's stable to build against |
+| [Repair a failed compile](docs/guides/repair-failed-compile.md) | `--repair-mode` — what it audits, how it resumes, which failures are auto-recoverable vs. require spec revision |
+
+### Reference
+
+| Doc | What's inside |
+|-----|--------------|
+| [CLI reference](docs/reference/cli.md) | Every `mellea-skills` subcommand (`compile`, `validate`, `run`, `ingest`, `certify`, `export`) with all options, defaults, and exit codes |
+| [melleafy.json reference](docs/reference/melleafy-json.md) | Full manifest schema, every field with type and description, modality values table, stable contract for integrations |
+| [Skill tiers](docs/reference/skill-tiers.md) | T1/T2/T3 definitions in depth, pre-compiled example tier table, how to determine your skill's tier after compile |
+
+### Architecture
+
+| Doc | What's inside |
+|-----|--------------|
+| [System design](docs/architecture/system-design.md) | Component boundaries (the Claude boundary, Mellea library boundary, Nexus boundary), full compilation data flow diagram, the proxy layer, source package structure |
+| [Pain points and mitigations](docs/architecture/pain-points-and-mitigations.md) | Honest 360° assessment: specification opacity (strong mitigation), runtime unobservability (strong mitigation), compliance disconnect (early-stage). What remains unsolved and why. |
+| [Extension guide](docs/architecture/extension-guide.md) | Every extension point: new skill specs, export targets (Adapter protocol), dialect docs, Guardian risk checks, compliance mappings. What can be built on top: skill registries, per-phase model routing, spec quality tooling, ecosystem-scale governance. Stable vs. unstable interface table. |
+
+### Troubleshooting
+
+| Doc | What's inside |
+|-----|--------------|
+| [Common issues](docs/troubleshooting/common-issues.md) | Top issues with exact fix commands: installation, compilation timeouts, lint failures, smoke check failures, Ollama connectivity, stub errors, certification gaps, export issues |
+
+---
+
+## Pre-compiled examples
+
+Four reference skills run immediately from `examples/`:
+
+| Skill | Tier | Archetype | Run command |
+|-------|------|-----------|-------------|
+| `weather` | T1 | D1 — Integration | `mellea-skills run examples/weather/weather_mellea --fixture rain_check_city` |
+| `sentry-find-bugs` | T1/T2 | A — Analysis | `mellea-skills run examples/sentry-find-bugs/sentry_find_bugs_mellea --fixture clean_secure_parameterized` |
+| `superpowers-systematic-debugging` | T1 | C — Diagnosis | `mellea-skills run examples/superpowers-systematic-debugging/superpowers_systematic_debugging_mellea --fixture architectural_issue_detected` |
+| `clawdefender` | T3 | A — Adversarial | `mellea-skills run examples/clawdefender/clawdefender_mellea --fixture prompt_injection_critical` |
+
+For a five-minute walkthrough of all four with real captured output, see [docs/README.md](docs/README.md).
+
+---
+
+## Skills library
+
+16 skill specifications in `skills/` — four pre-compiled, twelve compilable locally:
 
 ```bash
-export OLLAMA_API_URL=<ollama-api-url>
+mellea-skills compile skills/checklist/spec.md
+mellea-skills compile skills/slack/spec.md
+mellea-skills compile skills/github/spec.md
+# ... and 9 more
 ```
 
-## Quick Start
+See `skills/README.md` for the full tier and source attribution table.
 
-### You can download the skill specifications from GitHub or use your own specification file.
-
-Example skills: https://github.com/generative-computing/mellea-skills-compiler/tree/main/skills
-
-### Ollama Models
-
-We recommend downloading the Ollama models `granite3.3:8b` and `ibm/granite3.3-guardian:8b` beforehand, as they are set as defaults.
-
-For Risk Identification
-
-```
-ollama pull granite3.3:8b
-```
-
-For Risk Assessment
-
-```
-ollama pull ibm/granite3.3-guardian:8b
-```
-
-### Compile a skill specification
-
-#### Option 1: compile skill with CLI (Recommended)
-
-Compile a skill into a typed Mellea pipeline via the CLI:
-
-```bash
-mellea-skills compile <Your-local-path>/skills/weather/spec.md  # if skill is a single spec file.
-mellea-skills compile <Your-local-path>/skills/weather          # if skill is a directory containing spec files
-```
-
-Compile uses Sonnet as the default claude model. To use different claude model,
-
-```bash
-mellea-skills compile <Your-local-path>/skills/weather/spec.md --model aws/claude-opus-4-5
-mellea-skills compile <Your-local-path>/skills/weather --model aws/claude-opus-4-5
-```
-
-Melleafy Repair: Identify and correct any errors effectively in Mellea skill compilation
-
-```bash
-mellea-skills compile --repair-mode <Your-local-path>/skills/weather --model aws/claude-opus-4-5
-```
-
-#### Option 2: compile skill with Claude code
-
-Run `/mellea-fy` directly inside Claude Code:
-
-```bash
-./mellea-fy <Your-local-path>/skills/weather/spec.md
-```
-
-See [`mellea-fy/README.md`](mellea-fy/README.md) for detailed usage of the Claude Code command.
-
-### Run Skill Pipeline
-
-Run skill pipeline for a given fxiture
-
-```bash
-mellea-skills run <Your-local-path>/skills/weather/weather_mellea --fixture rain_check   # provide path to the compiled skill directory and the fixture name
-mellea-skills run <Your-local-path>/skills/weather/weather_mellea --enforce              # Block execution when Guardian detects risks (default: audit-only)
-mellea-skills run <Your-local-path>/skills/weather/weather_mellea --no_guardian          # Skip Guardian checks even if a policy manifest exists.
-```
-
-### Run Full Certification Pipeline for Mellea skill
-
-Run end-to-end certification — risk identification via AI Atlas Nexus, Guardian hook instrumentation, fixture execution, and compliance report — in a single command:
-
-```bash
-mellea-skills certify <Your-local-path>/skills/weather/weather_mellea                      # provide path to the compiled skill directory
-mellea-skills certify <Your-local-path>/skills/weather/weather_mellea --enforce            # Block on risk detection
-mellea-skills certify <Your-local-path>/skills/weather/weather_mellea --fixture rain_check # Run specific fixture - rain_check
-mellea-skills certify <Your-local-path>/skills/weather/weather_mellea --model granite3.3:8b --guardian-model ibm/granite3.3-guardian:8b --inference-engine ollama    # Using different risk model, guardian model and inference engine
-```
-
-### Export Compiled Mellea Skill
-
-Export a compiled Mellea skill to a deployment target - langgraph, claude-code, or mcp
-
-**Note**: This command is experimental. Output structure and CLI interface may change in future releases without a deprecation period.
-
-```bash
-mellea-skills export --target mcp <Your-local-path>/skills/weather/weather_mellea         # Supported deployment target: mcp, langgraph, claude-code
-mellea-skills export --target mcp --force <Your-local-path>/skills/weather/weather_mellea # '--force' overwrites output directory if it already exists.
-```
-
-### Certification artifacts
-
-All outputs are written to `audit/` adjacent to the compiled directory:
-
-```
-skills/weather/audit/
-├── policy_manifest.json        # Policy manifest (risks + governance actions)
-├── POLICY.md                   # Human-readable policy document
-├── CERTIFICATION.md            # Certification report with coverage summary
-├── audit_trail.jsonl           # Runtime Guardian verdicts
-└── pipeline_report.json        # Pipeline execution output
-```
-
-## Example Outputs
-
-The [`src/mellea_skills_compiler/examples/`](src/mellea_skills_compiler/examples/) directory contains pre-compiled, validated Mellea pipeline packages — runnable end-to-end against the project's Ollama + `granite3.3:8b` baseline. Each is a curated reference snapshot of what `mellea-skills compile` produces under the current architecture.
-
-| Skill                                                                          | Tier    | Archetype                  | Description                                                                                                                                    |
-| ------------------------------------------------------------------------------ | ------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| [weather](examples/weather/)                                                   | T1      | Fetch + summarise          | Public no-auth HTTP to `wttr.in`; intent classification dispatches to one of seven URL templates                                               |
-| [sentry-find-bugs](examples/sentry-find-bugs/)                                 | T1 / T2 | Structured analysis        | Multi-phase OWASP review producing severity-classified findings; two stub helpers (`search_fn`, `read_file_fn`) for codebase-scanning fixtures |
-| [superpowers-systematic-debugging](examples/superpowers-systematic-debugging/) | T1      | Constrained reasoning      | Four-phase debugging walk with hypothesis testing; `fix_attempts_count >= 3` triggers architectural-issue branch                               |
-| [clawdefender](examples/clawdefender/)                                         | T3      | Adversarial classification | Prompt injection / SSRF / command injection / credential exfiltration detection; bundled scripts need `chmod +x` on Unix                       |
-
-Each example includes the original `spec.md` (or `SKILL.md`), generated pipeline code, factory-shape fixtures, intermediate IR (`config_emission.json`, `fixtures_emission.json`, etc.), `mapping_report.md`, and `melleafy.json` manifest. See [`docs/README.md`](docs/README.md) for the runnable tutorial that walks through each one and [`docs/FROM_STUBS_TO_RUNNING.md`](docs/FROM_STUBS_TO_RUNNING.md) for the stub-implementation walkthrough.
-
-## Skills
-
-The [`skills/`](skills/) directory contains 16 skill specifications drawn from multiple sources (Sentry, Anthropic, community contributions, and IBM Research). Four of these ship as pre-compiled examples (see above); the rest can be compiled locally via `mellea-skills compile skills/<name>/spec.md`.
-
-Skills are classified into three tiers by what's needed to run a fixture against the compiled package:
-
-- **T1** — Runs out of the box. No stubs, no external services, no credentials.
-- **T2** — Runs after filling 1–2 stubs or supplying a small bundled artifact.
-- **T3** — Requires external integration before any fixture completes (CLI tool, API key, OAuth, runtime helper).
-
-See [`skills/README.md`](skills/README.md) for the full per-skill tier table and source attribution.
-
-## Repository Structure
-
-```
-src/mellea_skills_compiler/  # pip-installable package
-  certification/           # Ingest → policy → compliance → certification report
-  compile/                 # Compile Mellea skill specification into a Mellea pipeline using mellea-fy Claude command.
-  guardian/                # Granite Guardian hooks for Mellea pipelines
-  toolkit/                 # Shared utilities and enums
-  export/                  # Export a compiled Mellea skill to a deployment target
-mellea-fy/                 # Claude Code /mellea-fy command definition
-skills/                    # Skill specs, compiled pipelines, and fixtures
-examples/                  # mellea-fy output examples and demos
-tests/                     # Test suite
-```
-
-## Running Tests
-
-```bash
-pytest -s tests
-```
-
-See [`tests/README.md`](tests/README.md) for details.
-
-## Next Steps
-
-Mellea Skills Compiler is an active research project. The current release demonstrates the core pipeline; several directions are in progress.
-
-### Evaluation and evidence
-
-- **Cross-model evaluation** — We are developing a systematic comparison framework for how specification decomposition affects skill behaviour across model sizes and task types, capturing both correctness and predictability dimensions.
-- **Cost-benefit analysis** — Decomposition increases LLM call count compared to monolithic execution. Quantifying the efficiency-governance tradeoff is part of the ongoing work.
-
-### Compiler robustness
-
-- **Compiler reflection loop** — Currently, `/mellea-fy` is a single-pass compiler with no automated self-review. We are building a validate-and-repair cycle: generate, validate (syntax, imports, fixture execution), and repair broken files — applying the same reflection pattern the compiled pipelines already use internally.
-- **Modular compiler specification** — The mellea-fy command spec is itself a large natural-language document. We are investigating decomposing it into smaller, independently-testable modules to improve consistency.
-
-### Pipeline capabilities
-
-- **Specification linting** — Self-consistency analysis to detect contradictions in skill specs before compilation. Decomposition surfaces spec quality issues that monolithic execution can resolve silently; we are developing this into a standalone quality gate.
-- **Per-phase model routing** — Decomposed pipelines enable routing each phase to a different model tier; classification and extraction phases tend to suit smaller models, while complex reasoning phases benefit from larger ones. The optimisation surface is being explored.
-- **Closed-loop repair** — Feeding Guardian verdicts back into Mellea's existing repair loops, moving from "guardrails that flag" to "guardrails that fix."
-- **Ecosystem-scale governance** — Applying the certification pipeline to skill registries at scale.
-
-## Known Limitations
-
-- **Research preview** — APIs, CLI, and artifact formats may change
-- **Claude Code required for compilation** — Both `mellea-skills compile` and `/mellea-fy` invoke Claude Code under the hood for specification decomposition
-- **Static compliance classification** — YAML-based action-to-control mapping, not yet validated against ground truth
-- **Single domain evaluation** — Certification pipeline has been tested primarily on security and utility skills
-- **Python version constraints** — Python >=3.11 and <3.14.4 (ai-atlas-nexus requires 3.11+ and <3.14.4; Mellea supports 3.11+)
-
-## Contributing
-
-This is a research preview. We welcome feedback, bug reports, and suggestions via [Issues](../../issues). If you're interested in contributing or collaborating, please open an issue to start the conversation.
-
-## Team
-
-Elizabeth M. Daly, Dhaval Salwala, Inge Vejsbjerg, Seshu Tirupathi, Rebecka Nordenlöw, Jessica He, Kush R. Varshney, and Jordan McAfoose — IBM Research
-
-## Citation
-
-A technical report describing the system architecture, design rationale, and governance pipeline is included in this repository: [`docs/Mellea_Skills_Compiler-tech_report.pdf`](docs/Mellea_Skills_Compiler-tech_report.pdf).
-
-If you use Mellea Skills Compiler in your work, please cite:
-
-```bibtex
-@techreport{daly2026mellea,
-  title       = {Mellea Skills Compiler: Compiling and Certifying Agent Skills with Mellea},
-  author      = {Daly, Elizabeth M. and Salwala, Dhaval and Vejsbjerg, Inge and
-                 Tirupathi, Seshu and Nordenl{\"o}w, Rebecka and He, Jessica and
-                 Varshney, Kush R. and McAfoose, Jordan},
-  institution = {IBM Research},
-  year        = {2026},
-  month       = {May},
-  type        = {Technical Report},
-  url         = {https://github.com/generative-computing/mellea-skills-compiler/blob/main/docs/Mellea_Skills_Compiler-tech_report.pdf}
-}
-```
+---
 
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
+
+Original project: [IBM Research](https://www.ibm.com/research) — Elizabeth M. Daly, Dhaval Salwala, Inge Vejsbjerg, Seshu Tirupathi, Rebecka Nordenlöw, Jessica He, Kush R. Varshney, Jordan McAfoose.
