@@ -93,9 +93,11 @@ This repository adds 22 documentation files organized across seven sections. Sta
 
 ### Concepts
 
+> **New to Mellea? Start with [The skill compiler](docs/concepts/the-skill-compiler.md).** It traces the full compilation of the `weather` skill step by step — showing the actual intermediate JSON, generated Python, and lint results — so you can see exactly how a `.md` spec becomes a typed, governed pipeline.
+
 | Doc | What's inside |
 |-----|--------------|
-| [The skill compiler](docs/concepts/the-skill-compiler.md) | The full 10-step compilation pipeline — five-axis classification, inventory, element mapping, dependency audit, code generation, 14 structural lints, smoke check. The Claude boundary and wrapper-rendered files explained. |
+| ⭐ [**The skill compiler — with running example**](docs/concepts/the-skill-compiler.md) | **Start here to understand how Mellea works.** Walks the full 10-step compilation pipeline using the `weather` skill as a concrete running example — showing the actual `classification.json`, `inventory.json`, `element_mapping.json`, `dependency_plan.json`, generated Python code, and lint results produced by the real compiler. Every step is grounded in real output you can verify in `examples/weather/weather_mellea/intermediate/`. |
 | [Compiled package anatomy](docs/concepts/compiled-package-anatomy.md) | Every file in a `<name>_mellea/` package: what it does, whether it's LLM-generated or wrapper-rendered, and what's safe to modify |
 | [Skill archetypes](docs/concepts/skill-archetypes.md) | The five reasoning patterns (A/B/C/D1/D2/E) with real pipeline code examples for each, and a table of how archetype affects compilation |
 | [Dependency resolution](docs/concepts/dependency-resolution.md) | C1–C9 dependency categories, the eight dispositions (`bundle`, `real_impl`, `stub`, `mock`, etc.), and how stubs are generated and documented |
