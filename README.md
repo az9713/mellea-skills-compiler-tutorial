@@ -25,7 +25,7 @@
 >
 > This fork adds a comprehensive, structured documentation set covering every aspect of the compiler — what it is, how it works, how to extend it, and how to build on top of it. All original code, examples, and skills are preserved unchanged. The docs are the addition.
 
-Additional reference: **[YouTube — AI Skills Security, Open AI Deployment Company & Zero Days](https://www.youtube.com/watch?v=YCWwh70FZtQ&t=16s)**
+**Watch:** IBM researcher **Kush R. Varshney** discusses Mellea in [AI skills security, Open AI Deployment Company & zero days](https://www.youtube.com/watch?v=YCWwh70FZtQ&t=16s) on YouTube.
 
 ---
 
