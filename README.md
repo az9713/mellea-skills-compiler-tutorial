@@ -93,7 +93,9 @@ This repository adds 22 documentation files organized across seven sections. Sta
 
 ### Concepts
 
-> **New to Mellea? Start with [The skill compiler](docs/concepts/the-skill-compiler.md).** It traces the full compilation of the `weather` skill step by step — showing the actual intermediate JSON, generated Python, and lint results — so you can see exactly how a `.md` spec becomes a typed, governed pipeline.
+> **New to Mellea? Two docs with running examples explain the whole system:**
+> - [**The skill compiler**](docs/concepts/the-skill-compiler.md) — traces the full compilation of the `weather` skill step by step, showing the actual intermediate JSON and generated Python, so you can see exactly how a `.md` spec becomes a typed pipeline.
+> - [**Certification pipeline**](docs/concepts/certification-pipeline.md) — uses the `clawdefender` security scanner to show how Guardian hooks fire, what the audit trail looks like, and how NIST AI RMF requirements are classified as AUTOMATED/PARTIAL/MANUAL.
 
 | Doc | What's inside |
 |-----|--------------|
@@ -101,7 +103,7 @@ This repository adds 22 documentation files organized across seven sections. Sta
 | [Compiled package anatomy](docs/concepts/compiled-package-anatomy.md) | Every file in a `<name>_mellea/` package: what it does, whether it's LLM-generated or wrapper-rendered, and what's safe to modify |
 | [Skill archetypes](docs/concepts/skill-archetypes.md) | The five reasoning patterns (A/B/C/D1/D2/E) with real pipeline code examples for each, and a table of how archetype affects compilation |
 | [Dependency resolution](docs/concepts/dependency-resolution.md) | C1–C9 dependency categories, the eight dispositions (`bundle`, `real_impl`, `stub`, `mock`, etc.), and how stubs are generated and documented |
-| [Certification pipeline](docs/concepts/certification-pipeline.md) | Nexus risk identification, Guardian hooks (audit vs. enforce mode), PolicyManifest structure, AUTOMATED/PARTIAL/MANUAL compliance classification, audit trail format |
+| ⭐ [**Certification pipeline — with running example**](docs/concepts/certification-pipeline.md) | **Start here to understand how governance works.** Uses the `clawdefender` security scanner as a concrete running example — showing the actual PolicyManifest Nexus produces, Guardian pre/post-generation hook verdicts, the `audit_trail.jsonl` format, and the AUTOMATED/PARTIAL/MANUAL compliance classification. Explains why UNSAFE input + SAFE output is *correct* for a security classifier. |
 
 ### Guides
 
